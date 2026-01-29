@@ -24,22 +24,22 @@ start:
     xor di, di
     mov cx, 512
     rep movsb
-    jmp 0x0060:relocated
+    jmp 0x0060:relocated - 0x7C00
 
 relocated:
-    ; Reset ds register to 0x0060 so drive label works
+    ; Reset ds register to 0x0060 so relocated labels work
     mov ax, cs
     mov ds, ax
 
     ; Read partition boot sector
+    xor ax, ax
+    mov es, ax
     mov ah, 0x02
     mov al, 0x01
     mov ch, 0x00
     mov cl, 0x02
     mov dh, 0x00
-    mov dl, [drive]
-    xor ax, ax
-    mov es, ax
+    mov dl, [drive - 0x7C00]
     mov bx, 0x7C00
     int 0x13
 
