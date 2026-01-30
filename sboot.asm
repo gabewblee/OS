@@ -20,6 +20,9 @@ start:
     call enable_a20
     jc a20_failed
 
+	; Load the Kernel
+	call load_kernel
+
     ; Disable NMI
     in al, 0x70
     or al, 0x80
@@ -36,6 +39,34 @@ start:
 
     ; Make cs register hold the newly defined selector
     jmp 08h:protected
+
+load_kernel:
+	; Try LBA read (INT 13h Extensions)
+	mov word [dap + 2], kernel_num_sectors
+	mov word [dap + 4], 0x0000
+	mov word [dap + 6], 0x1000
+	mov dword [dap + 8], 3
+	mov dword [dap + 12], 0
+	mov si, dap
+	mov ah, 0x42
+	mov dl, [drive]
+	int 0x13
+	jnc .ok
+
+	; Fallback to CHS read
+	mov ah, 0x02        ; BIOS read sectors
+	mov al, kernel_num_sectors
+	mov ch, 0           ; cylinder 0
+	mov cl, 4           ; sector 4
+	mov dh, 0           ; head 0
+	mov dl, [drive]     ; boot drive
+	mov ax, 0x1000
+	mov es, ax
+	mov bx, 0x0000
+	int 0x13
+	jc disk_failed
+.ok:
+	ret
 
 gdtr:
     ; gdtr size
@@ -258,15 +289,29 @@ enable_a20:
 	popa
 	ret
 
+; Hang if the enabling the A20 line fails
 a20_failed:
-    cli
-
-.hang:
     hlt
-    jmp .hang
+    jmp a20_failed
+
+disk_failed:
+	hlt
+	jmp disk_failed
 
 drive:
 	db 0
+
+dap:
+	db 0x10
+	db 0x00
+	dw 0
+	dw 0
+	dw 0
+	dd 0
+	dd 0
+
+kernel_num_sectors equ 8
+kernel_num_bytes   equ (kernel_num_sectors * 512)
 
 entry equ 0x00100000
 
@@ -279,5 +324,12 @@ protected:
 	mov fs, ax
 	mov gs, ax
 	mov esp, 0x9FC00
+	cld
 
-	jmp entry
+	mov esi, 0x00010000
+	mov edi, 0x00100000
+	mov ecx, kernel_num_bytes / 4
+	rep movsd
+
+	mov eax, entry
+	jmp eax

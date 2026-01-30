@@ -30,7 +30,7 @@ disk.img: fboot.bin sboot.bin kernel.bin
 	dd if=/dev/zero of=disk.img bs=512 count=3000
 	dd if=fboot.bin of=disk.img bs=512 conv=notrunc
 	dd if=sboot.bin of=disk.img bs=512 seek=1 conv=notrunc
-	dd if=kernel.bin of=disk.img bs=512 seek=2 conv=notrunc
+	dd if=kernel.bin of=disk.img bs=512 seek=3 conv=notrunc
 
 run: all
 	qemu-system-i386 -drive format=raw,file=disk.img
