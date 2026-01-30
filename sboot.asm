@@ -35,7 +35,7 @@ start:
     mov cr0, eax
 
     ; Make cs register hold the newly defined selector
-    jmp 08h:main
+    jmp 08h:protected
 
 gdtr:
     ; gdtr size
@@ -266,4 +266,18 @@ a20_failed:
     jmp .hang
 
 drive:
-    db 0
+	db 0
+
+entry equ 0x00100000
+
+bits 32
+protected:
+	mov ax, 0x10
+	mov ds, ax
+	mov es, ax
+	mov ss, ax
+	mov fs, ax
+	mov gs, ax
+	mov esp, 0x9FC00
+
+	jmp entry
