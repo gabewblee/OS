@@ -65,6 +65,7 @@ load_kernel:
 	mov bx, 0x0000
 	int 0x13
 	jc disk_failed
+	
 .ok:
 	ret
 
@@ -310,7 +311,7 @@ dap:
 	dd 0
 	dd 0
 
-kernel_num_sectors equ 8
+kernel_num_sectors equ 1
 kernel_num_bytes   equ (kernel_num_sectors * 512)
 
 entry equ 0x00100000
@@ -328,8 +329,8 @@ protected:
 
 	mov esi, 0x00010000
 	mov edi, 0x00100000
-	mov ecx, kernel_num_bytes / 4
-	rep movsd
+	mov ecx, kernel_num_bytes
+	rep movsb
 
 	mov eax, entry
 	jmp eax
