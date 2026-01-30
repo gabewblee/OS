@@ -17,10 +17,54 @@ start:
     ; Define drive variable
     mov [drive], dl
 
-    sti
-
     call enable_a20
     jc a20_failed
+
+    ; Disable NMI
+    in al, 0x70
+    or al, 0x80
+    out 0x70, al
+    in al, 0x71
+
+    ; Enter protected mode
+    ; Load GDT register with start address of Global Descriptor Table
+    lgdt [gdtr]
+    mov eax, cr0
+    ; Set PE (Protection Enable) bit in CR0 (Control Register 0)
+    or al, 1
+    mov cr0, eax
+
+    ; Make cs register hold the newly defined selector
+    jmp 08h:main
+
+gdtr:
+    ; gdtr size
+    dw gdt_end - gdt - 1
+
+    ; gdtr offset
+    dd gdt
+
+gdt:
+    ; Null descriptor (Offset: 0x0000)
+    dq 0x0000000000000000
+
+    ; Kernel mode code segment (Offset: 0x0008)
+    dq 0x00C09A000000FFFF
+
+    ; Kernel mode data segment (Offset: 0x0010)
+    dq 0x00C092000000FFFF
+
+    ; User mode code segment (Offset: 0x0018)
+    dq 0x00C0FA000000FFFF
+
+    ; User mode data segment (Offset: 0x0020)
+    dq 0x00C0F2000000FFFF
+
+    ; Task state segment(?) (Offset: 0x0028)
+    ; Needs to be set using C code due to usage of sizeof(TSS) for limit
+    dq 0x0000000000000000
+
+gdt_end:
 
 ; Checks whether the A20 line is currently enabled.
 ; Returns (in ax register):
@@ -99,6 +143,7 @@ query_a20_support:
 
 ; Enable A20 using the 8042 keyboard controller
 enable_a20_keyboard_controller:
+	pushf
 	cli
 
 	call .wait_io1
@@ -126,7 +171,7 @@ enable_a20_keyboard_controller:
 	mov al, 0xae
 	out 0x64, al
 
-	sti
+	popf
 	ret
 
 ; Waits until the keyboard controller input buffer is empty
