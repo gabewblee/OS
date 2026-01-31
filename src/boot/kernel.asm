@@ -12,8 +12,9 @@ start:
 	mov ss, ax
 	mov fs, ax
 	mov gs, ax
-	mov ebp, 0x00100000
+	mov ebp, 0x00200000
 	mov esp, ebp
+
     call kmain
 	jmp $
 
