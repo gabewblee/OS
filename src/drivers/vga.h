@@ -30,6 +30,7 @@ void vga_print_char(int row, int col, char c, unsigned char fcolor, unsigned cha
  * @return void
  */
 void vga_print_string(int row, int col, const char* str, unsigned char fcolor, unsigned char bcolor);
+
 /**
  * Clears the screen with the given color.
  * 
