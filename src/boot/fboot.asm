@@ -41,7 +41,7 @@ relocated:
     mov bx, 0x7C00
     mov ah, 0x02
     ; Number of sectors to read
-    mov al, 0x02
+    mov al, 0x01
     mov ch, 0x00
     mov cl, 0x02
     mov dh, 0x00

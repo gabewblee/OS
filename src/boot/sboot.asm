@@ -1,6 +1,9 @@
 org 0x7C00
 bits 16
 
+code_segment equ gdt_kernel_code_segment - gdt_start
+data_segment equ gdt_kernel_data_segment - gdt_start
+
 start:
     cld
 
@@ -9,19 +12,12 @@ start:
     xor ax, ax
     mov ds, ax
     mov es, ax
-    add ax, 0x9000
     mov ss, ax
-    ; Bottom of stack at 0x9000:0xF000
-    mov sp, 0xF000
+    mov sp, 0x7C00
 
-    ; Define drive variable
-    mov [drive], dl
-
+	; Enable A20 line
     call enable_a20
     jc a20_failed
-
-	; Load the Kernel
-	call load_kernel
 
     ; Disable NMI
     in al, 0x70
@@ -31,67 +27,44 @@ start:
 
     ; Enter protected mode
     ; Load GDT register with start address of Global Descriptor Table
-    lgdt [gdtr]
+    lgdt [gdt_descriptor]
     mov eax, cr0
     ; Set PE (Protection Enable) bit in CR0 (Control Register 0)
     or al, 1
     mov cr0, eax
 
     ; Make cs register hold the newly defined selector
-    jmp 08h:protected
+    jmp code_segment:protected
 
-load_kernel:
-	; Try LBA read (INT 13h Extensions)
-	mov word [dap + 2], kernel_num_sectors
-	mov word [dap + 4], 0x0000
-	mov word [dap + 6], 0x1000
-	mov dword [dap + 8], 3
-	mov dword [dap + 12], 0
-	mov si, dap
-	mov ah, 0x42
-	mov dl, [drive]
-	int 0x13
-	jnc .ok
+gdt_descriptor:
+    ; gdt_descriptor size
+    dw gdt_end - gdt_start - 1
 
-	; Fallback to CHS read
-	mov ah, 0x02        ; BIOS read sectors
-	mov al, kernel_num_sectors
-	mov ch, 0           ; cylinder 0
-	mov cl, 4           ; sector 4
-	mov dh, 0           ; head 0
-	mov dl, [drive]     ; boot drive
-	mov ax, 0x1000
-	mov es, ax
-	mov bx, 0x0000
-	int 0x13
-	jc disk_failed
-	
-.ok:
-	ret
+    ; gdt_descriptor offset
+    dd gdt_start
 
-gdtr:
-    ; gdtr size
-    dw gdt_end - gdt - 1
-
-    ; gdtr offset
-    dd gdt
-
-gdt:
+gdt_start:
+gdt_null:
     ; Null descriptor (Offset: 0x0000)
     dq 0x0000000000000000
 
+gdt_kernel_code_segment:
     ; Kernel mode code segment (Offset: 0x0008)
     dq 0x00C09A000000FFFF
 
+gdt_kernel_data_segment:
     ; Kernel mode data segment (Offset: 0x0010)
     dq 0x00C092000000FFFF
 
+gdt_user_code_segment:
     ; User mode code segment (Offset: 0x0018)
     dq 0x00C0FA000000FFFF
 
+gdt_user_data_segment:
     ; User mode data segment (Offset: 0x0020)
     dq 0x00C0F2000000FFFF
 
+gdt_task_state_segment:
     ; Task state segment(?) (Offset: 0x0028)
     ; Needs to be set using C code due to usage of sizeof(TSS) for limit
     dq 0x0000000000000000
@@ -295,42 +268,60 @@ a20_failed:
     hlt
     jmp a20_failed
 
-disk_failed:
-	hlt
-	jmp disk_failed
-
-drive:
-	db 0
-
-dap:
-	db 0x10
-	db 0x00
-	dw 0
-	dw 0
-	dw 0
-	dd 0
-	dd 0
-
-kernel_num_sectors equ 1
-kernel_num_bytes   equ (kernel_num_sectors * 512)
-
-entry equ 0x00100000
+kernel_num_sectors equ 100
 
 bits 32
 protected:
-	mov ax, 0x10
-	mov ds, ax
-	mov es, ax
-	mov ss, ax
-	mov fs, ax
-	mov gs, ax
-	mov esp, 0x9FC00
-	cld
-
-	mov esi, 0x00010000
+	mov eax, 2
+	mov ecx, kernel_num_sectors
 	mov edi, 0x00100000
-	mov ecx, kernel_num_bytes
-	rep movsb
+	call ata_lba_read
+	jmp code_segment:0x00100000
 
-	mov eax, entry
-	jmp eax
+; Reads sectors from ATA disk using LBA addressing
+ata_lba_read:
+	mov ebx, eax
+	shr eax, 24
+	or eax, 0xE0
+	mov dx, 0x1F6
+	out dx, al
+
+	mov eax, ecx
+	mov dx, 0x1F2
+	out dx, al
+
+	mov eax, ebx
+	mov dx, 0x1F3
+	out dx, al
+
+	mov dx, 0x1F4
+	mov eax, ebx
+	shr eax, 8
+	out dx, al
+
+	mov dx, 0x1F5
+	mov eax, ebx
+	shr eax, 16
+	out dx, al
+
+	mov dx, 0x1F7
+	mov al, 0x20
+	out dx, al
+
+.next_sector:
+	push ecx
+
+.try_again:
+	mov dx, 0x1F7
+	in al, dx
+	test al, 8
+	jz .try_again
+
+	mov ecx, 256
+	mov dx, 0x1F0
+	rep insw
+	pop ecx
+	loop .next_sector
+	ret
+
+times 512-($-$$) db 0

@@ -1,41 +1,39 @@
+GCC = i686-elf-gcc
+LD = i686-elf-ld
 AS = nasm
-CC ?= i686-elf-gcc
-LD ?= i686-elf-ld
-OBJCOPY ?= i686-elf-objcopy
 
-BOOT = boot
+BOOT = src/boot
+BUILD = build
 
-CFLAGS = -ffreestanding -m32 -fno-pic -fno-stack-protector -nostdlib -nostdinc -Wall -Wextra
-LDFLAGS = -T $(BOOT)/linker.ld -nostdlib -m elf_i386
+CFLAGS = -ffreestanding -O2 -Wall -Wextra -nostdlib
+LDFLAGS = -T src/boot/linker.ld --oformat binary
+SIZE = 102
 
-all: fboot.bin sboot.bin kernel.bin disk.img
+all: $(BUILD)/fboot.bin $(BUILD)/sboot.bin $(BUILD)/kernel.bin
+	dd if=/dev/zero of=$(BUILD)/kernel.img bs=512 count=$(SIZE)
+	dd if=$(BUILD)/fboot.bin of=$(BUILD)/kernel.img conv=notrunc
+	dd if=$(BUILD)/sboot.bin of=$(BUILD)/kernel.img bs=512 seek=1 conv=notrunc
+	dd if=$(BUILD)/kernel.bin of=$(BUILD)/kernel.img bs=512 seek=2 conv=notrunc
 
-fboot.bin: $(BOOT)/fboot.asm
+$(BUILD)/fboot.bin: $(BOOT)/fboot.asm
 	$(AS) -f bin $< -o $@
 
-sboot.bin: $(BOOT)/sboot.asm
+$(BUILD)/sboot.bin: $(BOOT)/sboot.asm
 	$(AS) -f bin $< -o $@
 
-entry.o: $(BOOT)/entry.asm
+$(BUILD)/kernel.bin: $(BUILD)/kernel.asm.o $(BUILD)/kernel.o
+	$(LD) $(LDFLAGS) $^ -o $@
+
+$(BUILD)/kernel.asm.o: $(BOOT)/kernel.asm
 	$(AS) -f elf32 $< -o $@
 
-kernel.o: $(BOOT)/kernel.c
-	$(CC) $(CFLAGS) -c $< -o $@
-
-kernel.elf: entry.o kernel.o $(BOOT)/linker.ld
-	$(LD) $(LDFLAGS) -o $@ entry.o kernel.o
-
-kernel.bin: kernel.elf
-	$(OBJCOPY) -O binary $< $@
-
-disk.img: fboot.bin sboot.bin kernel.bin
-	dd if=/dev/zero of=disk.img bs=512 count=3000
-	dd if=fboot.bin of=disk.img bs=512 conv=notrunc
-	dd if=sboot.bin of=disk.img bs=512 seek=1 conv=notrunc
-	dd if=kernel.bin of=disk.img bs=512 seek=3 conv=notrunc
+$(BUILD)/kernel.o: $(BOOT)/kernel.c
+	$(GCC) $(CFLAGS) -c $< -o $@
 
 run: all
-	qemu-system-i386 -drive format=raw,file=disk.img
+	qemu-system-i386 -drive format=raw,file=$(BUILD)/kernel.img
 
 clean:
-	rm -f fboot.bin sboot.bin entry.o kernel.o kernel.elf kernel.bin disk.img
+	rm -f $(BUILD)/*.bin $(BUILD)/*.o $(BUILD)/kernel.img
+
+.PHONY: all run clean
