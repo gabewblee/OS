@@ -1,16 +1,21 @@
-static void vga_print(const char *s, unsigned char color) {
-    volatile unsigned short *vga = (volatile unsigned short *)0xB8000;
-    unsigned int i = 0;
+#include "../drivers/vga.h"
 
-    while (s[i] != '\0') {
-        vga[i] = (unsigned short)color << 8 | (unsigned short)s[i];
-        i++;
-    }
+void init_terminal(void) {
+    unsigned char black = 0x00;
+    unsigned char white = 0x0F;
+    vga_clear_screen(black);
+
+    vga_print_string(0, 0, "Initializing Kernel...", white, black);
+}
+
+void init_kernel(void) {
+    init_terminal();
 }
 
 void kmain(void) {
-    vga_print("Kernel boot: 0x00100000", 0x0F);
+    init_kernel();
 
-    for (;;) {
+    while(1) {
+        ;
     }
 }

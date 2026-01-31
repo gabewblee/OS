@@ -13,6 +13,10 @@ start:
     mov ss, ax
     mov sp, 0x7C00
 
+    ; Set VGA mode 03h: 80x25 16-color text (must be done before kernel uses 0xB8000)
+    mov ax, 0x0003
+    int 0x10
+
     ; Define drive variable
     mov [drive], dl
 
@@ -34,6 +38,9 @@ relocated:
     xor ax, ax
     mov ss, ax
     mov sp, 0x0600
+
+    mov si, loading_msg
+    call print
 
     ; Read partition boot sector using CHS
     xor ax, ax
@@ -82,6 +89,7 @@ print:
 .done:
     ret
 
+loading_msg db "Loading second stage bootloader...", 0x0D, 0x0A, 0
 loaded_msg db "Loaded second stage bootloader", 0x0D, 0x0A, 0
 error_msg db "Error: disk read failed", 0x0D, 0x0A, 0
 

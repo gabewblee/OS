@@ -49,20 +49,20 @@ gdt_null:
     dq 0x0000000000000000
 
 gdt_kernel_code_segment:
-    ; Kernel mode code segment (Offset: 0x0008)
-    dq 0x00C09A000000FFFF
+    ; Kernel mode code segment (Offset: 0x0008) - 4GB limit so kernel can access 0xB8000 (VGA)
+    dq 0x00CF9A000000FFFF
 
 gdt_kernel_data_segment:
-    ; Kernel mode data segment (Offset: 0x0010)
-    dq 0x00C092000000FFFF
+    ; Kernel mode data segment (Offset: 0x0010) - 4GB limit so kernel can access 0xB8000 (VGA)
+    dq 0x00CF92000000FFFF
 
 gdt_user_code_segment:
     ; User mode code segment (Offset: 0x0018)
-    dq 0x00C0FA000000FFFF
+    dq 0x00CFFA000000FFFF
 
 gdt_user_data_segment:
     ; User mode data segment (Offset: 0x0020)
-    dq 0x00C0F2000000FFFF
+    dq 0x00CFF2000000FFFF
 
 gdt_task_state_segment:
     ; Task state segment(?) (Offset: 0x0028)
