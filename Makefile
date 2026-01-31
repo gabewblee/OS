@@ -3,24 +3,26 @@ CC ?= i686-elf-gcc
 LD ?= i686-elf-ld
 OBJCOPY ?= i686-elf-objcopy
 
+BOOT = boot
+
 CFLAGS = -ffreestanding -m32 -fno-pic -fno-stack-protector -nostdlib -nostdinc -Wall -Wextra
-LDFLAGS = -T linker.ld -nostdlib -m elf_i386
+LDFLAGS = -T $(BOOT)/linker.ld -nostdlib -m elf_i386
 
 all: fboot.bin sboot.bin kernel.bin disk.img
 
-fboot.bin: fboot.asm
+fboot.bin: $(BOOT)/fboot.asm
 	$(AS) -f bin $< -o $@
 
-sboot.bin: sboot.asm
+sboot.bin: $(BOOT)/sboot.asm
 	$(AS) -f bin $< -o $@
 
-entry.o: entry.asm
+entry.o: $(BOOT)/entry.asm
 	$(AS) -f elf32 $< -o $@
 
-kernel.o: kernel.c
+kernel.o: $(BOOT)/kernel.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
-kernel.elf: entry.o kernel.o linker.ld
+kernel.elf: entry.o kernel.o $(BOOT)/linker.ld
 	$(LD) $(LDFLAGS) -o $@ entry.o kernel.o
 
 kernel.bin: kernel.elf
