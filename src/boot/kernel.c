@@ -1,4 +1,5 @@
 #include "../drivers/vga.h"
+#include "../interrupts/idt.h"
 
 void init_terminal(void) {
     unsigned char black = 0x00;
@@ -10,6 +11,7 @@ void init_terminal(void) {
 
 void init_kernel(void) {
     init_terminal();
+    idt_init();
 }
 
 void kmain(void) {
