@@ -5,6 +5,7 @@ AS = nasm
 BOOT = src/boot
 BUILD = build
 DRIVERS = src/drivers
+INTERRUPTS = src/interrupts
 
 CFLAGS = -ffreestanding -O2 -Wall -Wextra -nostdlib
 LDFLAGS = -T src/boot/linker.ld --oformat binary
@@ -22,7 +23,7 @@ $(BUILD)/fboot.bin: $(BOOT)/fboot.asm
 $(BUILD)/sboot.bin: $(BOOT)/sboot.asm
 	$(AS) -f bin $< -o $@
 
-$(BUILD)/kernel.bin: $(BUILD)/kernel.asm.o $(BUILD)/kernel.o $(BUILD)/vga.o
+$(BUILD)/kernel.bin: $(BUILD)/kernel.asm.o $(BUILD)/kernel.o $(BUILD)/vga.o $(BUILD)/idt.o $(BUILD)/isr.o
 	$(LD) $(LDFLAGS) $^ -o $@
 
 $(BUILD)/kernel.asm.o: $(BOOT)/kernel.asm
@@ -33,6 +34,12 @@ $(BUILD)/kernel.o: $(BOOT)/kernel.c
 
 $(BUILD)/vga.o: $(DRIVERS)/vga.c
 	$(GCC) $(CFLAGS) -c $^ -o $@
+
+$(BUILD)/idt.o: $(INTERRUPTS)/idt.c
+	$(GCC) $(CFLAGS) -c $^ -o $@
+
+$(BUILD)/isr.o: $(INTERRUPTS)/isr.asm
+	$(AS) -f elf32 $< -o $@
 
 run: all
 	qemu-system-i386 -vga none -device isa-vga -drive format=raw,file=$(BUILD)/kernel.img
