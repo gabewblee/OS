@@ -13,15 +13,12 @@ start:
     mov ss, ax
     mov sp, 0x7C00
 
-    ; Set VGA mode 03h: 80x25 16-color text (must be done before kernel uses 0xB8000)
-    mov ax, 0x0003
-    int 0x10
-
     ; Define drive variable
     mov [drive], dl
 
     ; Rewrite boot sector to [0x0060:0x0000]
     cld
+    ; Copy 512 bytes from 0x07C0:0x0000 to 0x0060:0x0000 cx times
     mov si, 0x0000
     mov ax, 0x0060
     mov es, ax
@@ -66,9 +63,6 @@ relocated:
     ; Jump to loaded second stage bootloader
     jmp 0x0000:0x7C00
 
-drive:
-    db 0
-
 disk_read_failed:
     mov si, error_msg
     call print
@@ -89,6 +83,7 @@ print:
 .done:
     ret
 
+drive db 0
 loading_msg db "Loading second stage bootloader...", 0x0D, 0x0A, 0
 loaded_msg db "Loaded second stage bootloader", 0x0D, 0x0A, 0
 error_msg db "Error: disk read failed", 0x0D, 0x0A, 0
