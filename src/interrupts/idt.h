@@ -3,6 +3,9 @@
 
 #include <stdint.h>
 
+/**
+ * IDT_MAX_DESCRIPTORS - Number of entries in the IDT
+ */
 #define IDT_MAX_DESCRIPTORS 256
 
 /**
@@ -31,6 +34,11 @@ typedef struct {
     uint32_t base;
 } __attribute__((packed)) idtr_t;
 
+/**
+ * idt_init - Initialize the Interrupt Descriptor Table
+ *
+ * Return: Nothing
+ */
 void idt_init(void);
 
 #endif

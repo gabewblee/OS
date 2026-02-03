@@ -1,9 +1,16 @@
-#include "../drivers/vga.h"
 #include "falloc.h"
 
 static frame_allocator falloc;
 
-// Helper function to reserve frames from start to end addresses
+/**
+ * reserve - Mark a physical address range as used
+ * @start: Start physical address (inclusive)
+ * @end: End physical address (exclusive)
+ *
+ * Aligns the range to page boundaries and sets corresponding bitmap bits
+ *
+ * Return: Nothing
+ */
 static void reserve(uint32_t start, uint32_t end) {
     start &= ~(PAGE_SIZE - 1);
     end = (end + PAGE_SIZE - 1) & ~(PAGE_SIZE - 1);
@@ -14,9 +21,14 @@ static void reserve(uint32_t start, uint32_t end) {
     }
 }
 
-// Set first 3MiB bits as used (reserved for kernel and devices)
+/**
+ * falloc_init - Initialize the frame allocator
+ *
+ * Reserves low memory, kernel space, and the allocator's bitmap storage
+ *
+ * Return: Nothing
+ */
 void falloc_init(void) {
-    frame_allocator falloc;
     for (uint32_t i = 0; i < BITMAP_SIZE; i++)
         falloc.bitmap[i] = 0;
 
@@ -32,6 +44,11 @@ void falloc_init(void) {
     reserve(bitmap_start, bitmap_end);
 }
 
+/**
+ * falloc_alloc - Allocate a free physical frame
+ *
+ * Return: Physical address of the allocated frame, or 0 on failure
+ */
 uint32_t falloc_alloc(void) {
     for (uint32_t i = 0; i < BITMAP_SIZE; i++) {
         if (falloc.bitmap[i] != 0xFFFFFFFF) {
@@ -47,6 +64,12 @@ uint32_t falloc_alloc(void) {
     return 0;
 }
 
+/**
+ * falloc_free - Free a previously allocated frame
+ * @paddr: Physical address of the frame to free
+ *
+ * Return: Nothing
+ */
 void falloc_free(uint32_t paddr) {
     uint32_t page_number = paddr / PAGE_SIZE;
     uint32_t index = page_number / WORD_SIZE;

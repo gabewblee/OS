@@ -11,6 +11,8 @@ extern void* isr_stub_table[];
  * exception_handler - Default CPU exception handler
  *
  * Disables interrupts and halts the CPU
+ *
+ * Return: Does not return
  */
 __attribute__((noreturn))
 void exception_handler(void)
@@ -25,7 +27,9 @@ void exception_handler(void)
  * @isr: Address of the ISR
  * @flags: Attributes (0x8E = present, ring 0, 32-bit interrupt gate)
  *
- * Splits the ISR address into low/high parts (as required by x86)
+ * Splits the ISR address into low/high parts as required by x86
+ *
+ * Return: Nothing
  */
 void idt_set_descriptor(uint8_t vector, void* isr, uint8_t flags)
 {
@@ -41,7 +45,9 @@ void idt_set_descriptor(uint8_t vector, void* isr, uint8_t flags)
 /**
  * idt_init - Initialize the Interrupt Descriptor Table
  *
- * Sets up the IDTR
+ * Sets up the IDTR and loads it into the CPU
+ *
+ * Return: Nothing
  */
 void idt_init(void)
 {
