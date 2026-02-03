@@ -87,7 +87,7 @@ protected:
     mov fs, ax
     mov gs, ax
     mov ss, ax
-    mov esp, 0x00090000        ; Set up stack in protected mode
+    mov esp, 0x00300000         ; Set up stack in protected mode
     
     ; Load the kernel
     call load_kernel
