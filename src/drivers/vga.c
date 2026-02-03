@@ -3,7 +3,7 @@
 void vga_print_char(int row, int col, char c, unsigned char fcolor, unsigned char bcolor) 
 {
     volatile unsigned short* vga_buffer = (unsigned short*)VGA_ADDR;
-    int offset = row * 80 + col;    
+    int offset = row * VGA_WIDTH + col;    
 
     unsigned char color = (bcolor << 4) | (fcolor & 0x0F);
     vga_buffer[offset] = (unsigned short)c | ((unsigned short)color << 8);
