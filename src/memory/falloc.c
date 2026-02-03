@@ -1,9 +1,35 @@
-#include "falloc.h"
 #include "../drivers/vga.h"
+#include "falloc.h"
 
+static frame_allocator falloc;
+
+// Helper function to reserve frames from start to end addresses
+static void reserve(uint32_t start, uint32_t end) {
+    start &= ~(PAGE_SIZE - 1);
+    end = (end + PAGE_SIZE - 1) & ~(PAGE_SIZE - 1);
+
+    for (uint32_t addr = start; addr < end; addr += PAGE_SIZE) {
+        uint32_t page = addr / PAGE_SIZE;
+        falloc.bitmap[page / WORD_SIZE] |= (1U << (page % WORD_SIZE));
+    }
+}
+
+// Set first 3MiB bits as used (reserved for kernel and devices)
 void falloc_init(void) {
+    frame_allocator falloc;
     for (uint32_t i = 0; i < BITMAP_SIZE; i++)
         falloc.bitmap[i] = 0;
+
+    // Reserve low memory
+    reserve(ADDR_RESERVED_START, ADDR_RESERVED_END);
+
+    // Reserve kernel space
+    extern uint32_t kend;
+    reserve(ADDR_KERNEL_START, (uint32_t)&kend);
+
+    uint32_t bitmap_start = (uint32_t)&falloc.bitmap;
+    uint32_t bitmap_end   = bitmap_start + sizeof(falloc.bitmap);
+    reserve(bitmap_start, bitmap_end);
 }
 
 uint32_t falloc_alloc(void) {
