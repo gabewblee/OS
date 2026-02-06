@@ -51,6 +51,7 @@ gdt_descriptor:
     dd gdt_start
 
 gdt_start:
+
 gdt_null:
     ; Null descriptor (Offset: 0x0000)
     dq 0x0000000000000000
@@ -109,6 +110,7 @@ load_kernel:
     
     ; Wait for drive to be ready
     mov dx, 0x1F7               ; Status port
+
 .wait_ready:
     in al, dx
     test al, 0x80               ; Test BSY bit
@@ -169,6 +171,7 @@ load_kernel:
     out dx, al
     
     ; Wait for data to be ready
+
 .wait_data:
     in al, dx
     test al, 0x08               ; Test DRQ (Data Request) bit

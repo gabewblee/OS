@@ -38,8 +38,8 @@
  * @pwt: Page-level write-through
  * @pcd: Page-level cache disable
  * @accessed: Accessed bit
- * @lower_avl: Lower 3 bits available for system programmer use
- * @ps: Page size (0 = 4 KiB)
+ * @lower_avl: Lower 1 bits available for system programmer use
+ * @ps: Page size
  * @upper_avl: Upper 4 bits available for system programmer use
  * @address: Physical address of the page table (bits 12-31)
  */
