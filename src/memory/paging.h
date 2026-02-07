@@ -94,7 +94,7 @@ typedef struct pg_table_entry_t {
 int get_paddr(uint32_t vaddr, uint32_t *paddr);
 
 /**
- * map_page - Map one virtual page to a physical frame
+ * map - Map one virtual page to a physical frame
  * @vaddr: Virtual address (page-aligned)
  * @paddr: Physical address (page-aligned)
  * @flags: PG_FLAG_RW, PG_FLAG_USER, or 0
@@ -102,16 +102,16 @@ int get_paddr(uint32_t vaddr, uint32_t *paddr);
  * Allocates a page table for the directory entry if needed. Invalidates TLB for @vaddr.
  * Return: 0 on success, -1 on failure
  */
-int map_page(uint32_t vaddr, uint32_t paddr, uint32_t flags);
+int map(uint32_t vaddr, uint32_t paddr, uint32_t flags);
 
 /**
- * unmap_page - Remove mapping for one virtual page
+ * unmap - Remove mapping for one virtual page
  * @vaddr: Virtual address (page-aligned)
  *
  * Clears the PTE. Invalidates TLB for @vaddr.
  * Return: 0 on success, -1 on failure
  */ 
-int unmap_page(uint32_t vaddr);
+int unmap(uint32_t vaddr);
 
 /**
  * invalidate_tlb - Invalidate TLB entry for one virtual address
