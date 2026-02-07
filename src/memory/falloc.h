@@ -33,12 +33,12 @@
 /**
  * ADDR_IO_START - Reserved I/O memory start
  */
-#define ADDR_IO_START    0x00000000
+#define ADDR_IO_START          0x00000000
 
 /**
  * ADDR_IO_END - Reserved I/O memory end
  */
-#define ADDR_IO_END      0x000FFFFF
+#define ADDR_IO_END            0x000FFFFF
 
 /**
  * ADDR_KERNEL_START - Kernel memory start

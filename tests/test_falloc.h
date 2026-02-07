@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 
-#include "../../src/memory/falloc.h"
+#include "../src/memory/falloc.h"
 
 /**
  * PAGE_SIZE - System page size in bytes

@@ -1,6 +1,6 @@
 #include "test_falloc.h"
 
-#include "../../src/utils.h"
+#include "../src/utils.h"
 
 /**
  * count_num_bits_set - Count set bits in the bitmap (reserved pages)

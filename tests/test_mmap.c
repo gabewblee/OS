@@ -1,6 +1,6 @@
 #include "test_mmap.h"
 
-#include "../../src/utils.h"
+#include "../src/utils.h"
 
 /**
  * test_mmap_init - Test the mmap initialization

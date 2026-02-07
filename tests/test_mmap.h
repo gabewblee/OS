@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 
-#include "../../src/memory/mmap.h"
+#include "../src/memory/mmap.h"
 
 /**
  * test_mmap_init - Test the mmap initialization

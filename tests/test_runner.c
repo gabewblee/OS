@@ -5,7 +5,6 @@
 
 #include "test_falloc.h"
 #include "test_mmap.h"
-#include "test_paging.h"
 
 /**
  * panic - Provide panic for code under test
@@ -41,6 +40,7 @@ static int run(void) {
         fprintf(stdout, "PASS: test_mmap_init\n");
     }
 
+<<<<<<< HEAD
     if (test_paging_init() != 0) {
         fprintf(stderr, "FAIL: test_paging_init\n");
         failed = 1;
@@ -48,6 +48,8 @@ static int run(void) {
         fprintf(stdout, "PASS: test_paging_init\n");
     }
 
+=======
+>>>>>>> origin/memory
     return failed;
 }
 

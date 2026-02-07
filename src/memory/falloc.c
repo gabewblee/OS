@@ -1,7 +1,6 @@
 #include <stddef.h>
 
 #include "falloc.h"
-
 #include "../utils.h"
 
 /**
@@ -65,9 +64,6 @@ void falloc_init(const mmap_t *map) {
  * Return: 0 on success, -1 on failure
  */
 int fallocate(uint32_t *paddr) {
-    if (!paddr)
-        return -1;
-
     for (uint32_t i = 0; i < BITMAP_SIZE; i++) {
         if (falloc.bitmap[i] != 0xFFFFFFFF) {
             for (uint32_t j = 0; j < WORD_SIZE; j++) {

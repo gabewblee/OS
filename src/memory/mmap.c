@@ -3,7 +3,7 @@
 #include "../utils.h"
 
 /**
- * mmap_register_section - Add a memory section to the memory map
+ * register_section - Add a memory section to the memory map
  * @map: Pointer to the memory map
  * @start: Start address of the section
  * @end: End address of the section
@@ -11,7 +11,7 @@
  *
  * Return: Nothing
  */
-static void mmap_register_section(mmap_t *map, uint32_t start, uint32_t end, mtype_t type) {
+static void register_section(mmap_t *map, uint64_t start, uint64_t end, mtype_t type) {
     map->sections[map->count].start = start;
     map->sections[map->count].end = end;
     map->sections[map->count].type = type;
@@ -28,11 +28,11 @@ void mmap_init(mmap_t *map) {
     map->count = 0;
 
     /* I/O memory */
-    mmap_register_section(map, ADDR_IO_START, ADDR_IO_END, SECTION_IO);
+    register_section(map, ADDR_IO_START, ADDR_IO_END, SECTION_IO);
 
     /* Kernel memory */
-    mmap_register_section(map, ADDR_KERNEL_START, ADDR_KERNEL_END, SECTION_KERNEL);
+    register_section(map, ADDR_KERNEL_START, ADDR_KERNEL_END, SECTION_KERNEL);
 
     /* Free memory */
-    mmap_register_section(map, ADDR_FREE_START, ADDR_FREE_END, SECTION_FREE);
+    register_section(map, ADDR_FREE_START, ADDR_FREE_END, SECTION_FREE);
 }

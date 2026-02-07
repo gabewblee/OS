@@ -1,7 +1,13 @@
 NASM = nasm
+<<<<<<< HEAD
 I686-ELF-GCC = i686-elf-gcc
 I686-ELF-LD = i686-elf-ld
 I686-ELF-OBJCOPY = i686-elf-objcopy
+=======
+I686_ELF_GCC = i686-elf-gcc
+I686_ELF_LD = i686-elf-ld
+I686_ELF_OBJCOPY = i686-elf-objcopy
+>>>>>>> origin/memory
 GCC = gcc
 
 BOOT = src/boot
@@ -23,43 +29,43 @@ all: $(BUILD)/fboot.bin $(BUILD)/sboot.bin $(BUILD)/kernel.bin $(BUILD)/kernel.e
 	dd if=$(BUILD)/kernel.bin of=$(BUILD)/kernel.img bs=512 seek=2 conv=notrunc
 
 $(BUILD)/fboot.bin: $(BOOT)/fboot.asm
-	$(AS) -f bin $< -o $@
+	$(NASM) -f bin $< -o $@
 
 $(BUILD)/sboot.bin: $(BOOT)/sboot.asm
-	$(AS) -f bin $< -o $@
+	$(NASM) -f bin $< -o $@
 
 $(BUILD)/kernel.bin: $(BUILD)/kernel.elf
-	$(OBJCOPY) -O binary $< $@
+	$(I686_ELF_OBJCOPY) -O binary $< $@
 
 $(BUILD)/kernel.elf: $(BUILD)/kernel.asm.o $(BUILD)/kernel.o $(BUILD)/vga.o $(BUILD)/idt.o $(BUILD)/isr.o $(BUILD)/falloc.o $(BUILD)/paging.o $(BUILD)/mmap.o
-	$(LD) -T src/boot/linker.ld $^ -o $@
+	$(I686_ELF_LD) -T src/boot/linker.ld $^ -o $@
 
 $(BUILD)/kernel.asm.o: $(BOOT)/kernel.asm
-	$(AS) -f elf32 $< -o $@
+	$(NASM) -f elf32 $< -o $@
 
 $(BUILD)/kernel.o: $(BOOT)/kernel.c
-	$(GCC) $(CFLAGS) -c $^ -o $@
+	$(I686_ELF_GCC) $(CFLAGS) -c $^ -o $@
 
 $(BUILD)/vga.o: $(DRIVERS)/vga.c
-	$(GCC) $(CFLAGS) -c $^ -o $@
+	$(I686_ELF_GCC) $(CFLAGS) -c $^ -o $@
 
 $(BUILD)/idt.o: $(INTERRUPTS)/idt.c
-	$(GCC) $(CFLAGS) -c $^ -o $@
+	$(I686_ELF_GCC) $(CFLAGS) -c $^ -o $@
 
 $(BUILD)/isr.o: $(INTERRUPTS)/isr.asm
-	$(AS) -f elf32 $< -o $@
+	$(NASM) -f elf32 $< -o $@
 
 $(BUILD)/falloc.o: $(MEMORY)/falloc.c
-	$(GCC) $(CFLAGS) -c $^ -o $@
+	$(I686_ELF_GCC) $(CFLAGS) -c $^ -o $@
 
 $(BUILD)/paging.o: $(MEMORY)/paging.c
-	$(GCC) $(CFLAGS) -c $^ -o $@
+	$(I686_ELF_GCC) $(CFLAGS) -c $^ -o $@
 
 $(BUILD)/mmap.o: $(MEMORY)/mmap.c
-	$(GCC) $(CFLAGS) -c $^ -o $@
+	$(I686_ELF_GCC) $(CFLAGS) -c $^ -o $@
 
 # Test executable
-$(BUILD)/tests: $(BUILD)/test_runner.o $(BUILD)/test_falloc.o $(BUILD)/test_mmap.o $(BUILD)/test_paging.o $(BUILD)/falloc_host.o $(BUILD)/mmap_host.o $(BUILD)/paging_host.o
+$(BUILD)/tests: $(BUILD)/test_runner.o $(BUILD)/test_falloc.o $(BUILD)/test_mmap.o $(BUILD)/falloc_host.o $(BUILD)/mmap_host.o
 	$(GCC) $(TCFLAGS) $^ -o $@
 
 $(BUILD)/test_runner.o: $(TESTS)/test_runner.c
@@ -71,16 +77,10 @@ $(BUILD)/test_falloc.o: $(TESTS)/test_falloc.c $(TESTS)/test_falloc.h
 $(BUILD)/test_mmap.o: $(TESTS)/test_mmap.c $(TESTS)/test_mmap.h
 	$(GCC) $(TCFLAGS) -c $(TESTS)/test_mmap.c -o $@
 
-$(BUILD)/test_paging.o: $(TESTS)/test_paging.c $(TESTS)/test_paging.h
-	$(GCC) $(TCFLAGS) -c $(TESTS)/test_paging.c -o $@
-
 $(BUILD)/falloc_host.o: $(MEMORY)/falloc.c
 	$(GCC) $(TCFLAGS) -c $< -o $@
 
 $(BUILD)/mmap_host.o: $(MEMORY)/mmap.c
-	$(GCC) $(TCFLAGS) -c $< -o $@
-
-$(BUILD)/paging_host.o: $(MEMORY)/paging.c
 	$(GCC) $(TCFLAGS) -c $< -o $@
 
 tests: $(BUILD)/tests

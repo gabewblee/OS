@@ -2,6 +2,7 @@
 #define PAGING_H
 
 #include <stdint.h>
+
 #include "mmap.h"
 
 /**
@@ -37,8 +38,8 @@
  * @pwt: Page-level write-through
  * @pcd: Page-level cache disable
  * @accessed: Accessed bit
- * @lower_avl: Lower 3 bits available for system programmer use
- * @ps: Page size (0 = 4 KiB)
+ * @lower_avl: Lower 1 bits available for system programmer use
+ * @ps: Page size (bit 0 = 4 KiB)
  * @upper_avl: Upper 4 bits available for system programmer use
  * @address: Physical address of the page table (bits 12-31)
  */
@@ -93,7 +94,7 @@ typedef struct pg_table_entry_t {
 int get_paddr(uint32_t vaddr, uint32_t *paddr);
 
 /**
- * map_page - Map one virtual page to a physical frame
+ * map - Map one virtual page to a physical frame
  * @vaddr: Virtual address (page-aligned)
  * @paddr: Physical address (page-aligned)
  * @flags: PG_FLAG_RW, PG_FLAG_USER, or 0
@@ -101,16 +102,16 @@ int get_paddr(uint32_t vaddr, uint32_t *paddr);
  * Allocates a page table for the directory entry if needed. Invalidates TLB for @vaddr.
  * Return: 0 on success, -1 on failure
  */
-int map_page(uint32_t vaddr, uint32_t paddr, uint32_t flags);
+int map(uint32_t vaddr, uint32_t paddr, uint32_t flags);
 
 /**
- * unmap_page - Remove mapping for one virtual page
+ * unmap - Remove mapping for one virtual page
  * @vaddr: Virtual address (page-aligned)
  *
  * Clears the PTE. Invalidates TLB for @vaddr.
  * Return: 0 on success, -1 on failure
  */ 
-int unmap_page(uint32_t vaddr);
+int unmap(uint32_t vaddr);
 
 /**
  * invalidate_tlb - Invalidate TLB entry for one virtual address
@@ -129,23 +130,5 @@ void invalidate_tlb(uint32_t vaddr);
  * Return: Nothing
  */
 void paging_init(const mmap_t *mmap);
-
-#ifdef TEST
-/**
- * paging_test_setup - Set up a single identity mapping
- * @vaddr: Page-aligned virtual address to map
- * @buf: 4KB buffer to use as the page table (must be page-aligned)
- *
- * Return: Nothing
- */
-void paging_test_setup(uint32_t vaddr, void *buf);
-
-/**
- * paging_test_setup_add - Add one more identity mapping without zeroing pg_dir
- * @vaddr: Page-aligned virtual address to map
- * @buf: 4KB buffer for the page table (must be page-aligned, in low 4 GiB)
- */
-void paging_test_setup_add(uint32_t vaddr, void *buf);
-#endif
 
 #endif
