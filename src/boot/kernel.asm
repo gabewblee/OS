@@ -12,7 +12,7 @@ start:
 	mov ss, ax
 	mov fs, ax
 	mov gs, ax
-	mov ebp, 0x00200000
+	mov ebp, 0x004FFFFF
 	mov esp, ebp
 
     call kmain

@@ -3,6 +3,8 @@
 
 #include <stdint.h>
 
+#include "mmap.h"
+
 /**
  * WORD_SIZE - Bits per bitmap word
  */
@@ -29,19 +31,34 @@
 #define BITMAP_SIZE            (MAX_NUM_PAGES / WORD_SIZE)
 
 /**
- * ADDR_RESERVED_START - Reserved low memory start (0 MiB)
+ * ADDR_IO_START - Reserved I/O memory start
  */
-#define ADDR_RESERVED_START    0x00000000
+#define ADDR_IO_START          0x00000000
 
 /**
- * ADDR_RESERVED_END - Reserved low memory end (1 MiB)
+ * ADDR_IO_END - Reserved I/O memory end
  */
-#define ADDR_RESERVED_END      0x00100000
+#define ADDR_IO_END            0x000FFFFF
 
 /**
- * ADDR_KERNEL_START - Kernel physical start (1 MiB)
+ * ADDR_KERNEL_START - Kernel memory start
  */
 #define ADDR_KERNEL_START      0x00100000
+
+/**
+ * ADDR_KERNEL_END - Kernel memory end
+ */
+#define ADDR_KERNEL_END        0x004FFFFF
+
+/**
+ * ADDR_FREE_START - Free memory start
+ */
+#define ADDR_FREE_START        0x00500000
+
+/**
+ * ADDR_FREE_END - Free memory end
+ */
+#define ADDR_FREE_END          0xFFFFFFFF
 
 /**
  * struct frame_allocator - Physical frame allocator state
@@ -52,25 +69,34 @@ typedef struct frame_allocator {
 } frame_allocator;
 
 /**
+ * get_frame_allocator - Get the frame allocator instance
+ *
+ * Return: Pointer to the frame allocator instance
+ */
+frame_allocator *get_frame_allocator(void);
+
+/**
  * falloc_init - Initialize the frame allocator
+ * @map: Pointer to the memory map
  *
  * Return: Nothing
  */
-void falloc_init(void);
+void falloc_init(const mmap_t *map);
 
 /**
- * falloc_alloc - Allocate a physical frame
+ * fallocate - Allocate a physical frame
+ * @paddr: On success, set to the physical address of the frame
  *
- * Return: Physical address of the allocated frame, or 0 on failure
+ * Return: 0 on success, -1 on failure (no free frame)
  */
-uint32_t falloc_alloc(void);
+int fallocate(uint32_t *paddr);
 
 /**
- * falloc_free - Free a previously allocated frame
- * @paddr: Physical address of the frame to free
+ * ffree - Free a previously allocated frame
+ * @paddr: Physical address of the frame (as returned by fallocate())
  *
  * Return: Nothing
  */
-void falloc_free(uint32_t paddr);
+void ffree(uint32_t paddr);
 
 #endif

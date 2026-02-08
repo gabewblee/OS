@@ -1,11 +1,20 @@
 #include "idt.h"
 
+/**
+ * idt - Interrupt Descriptor Table
+ */
 __attribute__((aligned(0x10)))
 static idt_entry_t idt[IDT_MAX_DESCRIPTORS];
 
+/**
+ * idtr - Interrupt Descriptor Table Register
+ */
 static idtr_t idtr;
 
-extern void* isr_stub_table[];
+/**
+ * isr_stub_table - Table of ISR stub addresses
+ */
+extern uint32_t isr_stub_table[];
 
 /**
  * exception_handler - Default CPU exception handler
@@ -31,15 +40,15 @@ void exception_handler(void)
  *
  * Return: Nothing
  */
-void idt_set_descriptor(uint8_t vector, void* isr, uint8_t flags)
+void idt_set_descriptor(uint8_t vector, uint32_t isr, uint8_t flags)
 {
     idt_entry_t* descriptor = &idt[vector];
 
-    descriptor->isr_low    = (uint32_t)isr & 0xFFFF;
+    descriptor->isr_low    = isr & 0xFFFF;
     descriptor->segment    = 0x08;
     descriptor->reserved   = 0;
     descriptor->attributes = flags;
-    descriptor->isr_high   = (uint32_t)isr >> 16;
+    descriptor->isr_high   = isr >> 16;
 }
 
 /**

@@ -109,6 +109,7 @@ load_kernel:
     
     ; Wait for drive to be ready
     mov dx, 0x1F7               ; Status port
+
 .wait_ready:
     in al, dx
     test al, 0x80               ; Test BSY bit
@@ -169,6 +170,7 @@ load_kernel:
     out dx, al
     
     ; Wait for data to be ready
+
 .wait_data:
     in al, dx
     test al, 0x08               ; Test DRQ (Data Request) bit

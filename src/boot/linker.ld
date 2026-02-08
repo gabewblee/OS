@@ -1,5 +1,4 @@
 ENTRY(start)
-OUTPUT_FORMAT(binary)
 SECTIONS
 {
     /* Start placing output at 1 MiB */

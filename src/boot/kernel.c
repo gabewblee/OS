@@ -1,6 +1,23 @@
 #include "../drivers/vga.h"
 #include "../interrupts/idt.h"
 #include "../memory/falloc.h"
+#include "../memory/paging.h"
+#include "../memory/mmap.h"
+
+/**
+ * BLACK - Black vga color definition
+ */
+#define BLACK 0x00
+
+/**
+ * WHITE - White vga color definition
+ */
+#define WHITE 0x0F
+
+/**
+ * mmap - Global memory map instance
+ */
+mmap_t mmap;
 
 /**
  * terminal_init - Initialize the VGA terminal
@@ -10,11 +27,7 @@
  * Return: Nothing
  */
 void terminal_init(void) {
-    unsigned char black = 0x00;
-    unsigned char white = 0x0F;
-    vga_clear_screen(black);
-
-    vga_print_string(0, 0, "Initializing Kernel...", white, black);
+    vga_clear_screen(BLACK);
 }
 
 /**
@@ -23,9 +36,23 @@ void terminal_init(void) {
  * Return: Nothing
  */
 void kernel_init(void) {
+    /* Terminal */
     terminal_init();
-    idt_init();
-    falloc_init();
+    vga_print_string(0, 0, "Initialized terminal", WHITE, BLACK);
+
+    /* Interrupts */
+    // idt_init();
+    // vga_print_string(1, 0, "Initialized interrupts", WHITE, BLACK);
+
+    /* Memory */
+    mmap_init(&mmap);
+    vga_print_string(2, 0, "Initialized global memory map", WHITE, BLACK);
+
+    falloc_init(&mmap);
+    vga_print_string(3, 0, "Initialized page frame allocator", WHITE, BLACK);
+
+    paging_init(&mmap);
+    vga_print_string(4, 0, "Initialized paging", WHITE, BLACK);
 }
 
 /**
