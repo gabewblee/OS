@@ -11,7 +11,10 @@
  *
  * Return: Nothing
  */
-static void register_section(mmap_t *map, uint64_t start, uint64_t end, mtype_t type) {
+static void register_section(mmap_t *map, uint32_t start, uint32_t end, mtype_t type) {
+    if (map->count >= MAX_MEM_SECTIONS)
+        panic("Error: maximum number of memory sections reached");
+    
     map->sections[map->count].start = start;
     map->sections[map->count].end = end;
     map->sections[map->count].type = type;

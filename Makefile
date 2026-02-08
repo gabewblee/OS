@@ -1,13 +1,7 @@
 NASM = nasm
-<<<<<<< HEAD
-I686-ELF-GCC = i686-elf-gcc
-I686-ELF-LD = i686-elf-ld
-I686-ELF-OBJCOPY = i686-elf-objcopy
-=======
 I686_ELF_GCC = i686-elf-gcc
 I686_ELF_LD = i686-elf-ld
 I686_ELF_OBJCOPY = i686-elf-objcopy
->>>>>>> origin/memory
 GCC = gcc
 
 BOOT = src/boot

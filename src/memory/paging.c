@@ -144,6 +144,10 @@ int map(uint32_t vaddr, uint32_t paddr, uint32_t flags) {
     if (pg_table_entry->present)
         return -1;
 
+    /* User access is not allowed for supervisor pages */
+    if (!pg_dir_entry->user && user)
+        return -1;
+
     pg_table_entry_zero(pg_table_entry);
     pg_table_entry->present = 1;
     pg_table_entry->rw = rw;
@@ -223,9 +227,11 @@ static void paging_kernel_space(const mmap_t *mmap) {
             panic("Error: frame allocation failed");
 
         pg_table_entry_t *pg_table = (pg_table_entry_t *)(uintptr_t)allocated;
+        for (uint32_t i = 0; i < NUM_PAGE_ENTRIES; i++)
+            pg_table_entry_zero(&pg_table[i]);
+        
         for (uint32_t i = 0; i < NUM_PAGE_ENTRIES && addr < end_aligned; i++) {
             pg_table_entry_t *pg_table_entry = &pg_table[i];
-            pg_table_entry_zero(pg_table_entry);
             pg_table_entry->present = 1;
             pg_table_entry->rw = 1;
             pg_table_entry->address = addr >> 12;
