@@ -16,6 +16,11 @@
  */
 #define WHITE 0x0F
 
+/** 
+ * RED - Red vga color definition
+ */
+#define RED 0x0C
+
 /**
  * panic - Display a panic message and halt the system
  * @err: Error message to display

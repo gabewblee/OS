@@ -31,7 +31,7 @@ $(BUILD)/sboot.bin: $(BOOT)/sboot.asm
 $(BUILD)/kernel.bin: $(BUILD)/kernel.elf
 	$(I686_ELF_OBJCOPY) -O binary $< $@
 
-$(BUILD)/kernel.elf: $(BUILD)/kernel.asm.o $(BUILD)/kernel.o $(BUILD)/vga.o $(BUILD)/idt.o $(BUILD)/isr.o $(BUILD)/falloc.o $(BUILD)/paging.o $(BUILD)/mmap.o
+$(BUILD)/kernel.elf: $(BUILD)/kernel.asm.o $(BUILD)/kernel.o $(BUILD)/vga.o $(BUILD)/idt.o $(BUILD)/isr.o $(BUILD)/pic.o $(BUILD)/falloc.o $(BUILD)/paging.o $(BUILD)/mmap.o
 	$(I686_ELF_LD) -T src/boot/linker.ld $^ -o $@
 
 $(BUILD)/kernel.asm.o: $(BOOT)/kernel.asm
@@ -48,6 +48,9 @@ $(BUILD)/idt.o: $(INTERRUPTS)/idt.c
 
 $(BUILD)/isr.o: $(INTERRUPTS)/isr.asm
 	$(NASM) -f elf32 $< -o $@
+
+$(BUILD)/pic.o: $(INTERRUPTS)/pic.c
+	$(I686_ELF_GCC) $(CFLAGS) -c $^ -o $@
 
 $(BUILD)/falloc.o: $(MEMORY)/falloc.c
 	$(I686_ELF_GCC) $(CFLAGS) -c $^ -o $@
