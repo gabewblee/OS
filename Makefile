@@ -31,7 +31,7 @@ $(BUILD)/sboot.bin: $(BOOT)/sboot.asm
 $(BUILD)/kernel.bin: $(BUILD)/kernel.elf
 	$(I686_ELF_OBJCOPY) -O binary $< $@
 
-$(BUILD)/kernel.elf: $(BUILD)/kernel.asm.o $(BUILD)/kernel.o $(BUILD)/vga.o $(BUILD)/idt.o $(BUILD)/isr.o $(BUILD)/pic.o $(BUILD)/falloc.o $(BUILD)/paging.o $(BUILD)/mmap.o
+$(BUILD)/kernel.elf: $(BUILD)/kernel.asm.o $(BUILD)/kernel.o $(BUILD)/vga.o $(BUILD)/idt.o $(BUILD)/isr.o $(BUILD)/pic.o $(BUILD)/pmm.o $(BUILD)/paging.o $(BUILD)/mmap.o $(BUILD)/ata_pio.o
 	$(I686_ELF_LD) -T src/boot/linker.ld $^ -o $@
 
 $(BUILD)/kernel.asm.o: $(BOOT)/kernel.asm
@@ -52,7 +52,7 @@ $(BUILD)/isr.o: $(INTERRUPTS)/isr.asm
 $(BUILD)/pic.o: $(INTERRUPTS)/pic.c
 	$(I686_ELF_GCC) $(CFLAGS) -c $^ -o $@
 
-$(BUILD)/falloc.o: $(MEMORY)/falloc.c
+$(BUILD)/pmm.o: $(MEMORY)/pmm.c
 	$(I686_ELF_GCC) $(CFLAGS) -c $^ -o $@
 
 $(BUILD)/paging.o: $(MEMORY)/paging.c
@@ -61,20 +61,23 @@ $(BUILD)/paging.o: $(MEMORY)/paging.c
 $(BUILD)/mmap.o: $(MEMORY)/mmap.c
 	$(I686_ELF_GCC) $(CFLAGS) -c $^ -o $@
 
+$(BUILD)/ata_pio.o: $(DRIVERS)/ata_pio.c
+	$(I686_ELF_GCC) $(CFLAGS) -c $^ -o $@
+
 # Test executable
-$(BUILD)/tests: $(BUILD)/test_runner.o $(BUILD)/test_falloc.o $(BUILD)/test_mmap.o $(BUILD)/falloc_host.o $(BUILD)/mmap_host.o
+$(BUILD)/tests: $(BUILD)/test_runner.o $(BUILD)/test_pmm.o $(BUILD)/test_mmap.o $(BUILD)/pmm_host.o $(BUILD)/mmap_host.o
 	$(GCC) $(TCFLAGS) $^ -o $@
 
 $(BUILD)/test_runner.o: $(TESTS)/test_runner.c
 	$(GCC) $(TCFLAGS) -c $< -o $@
 
-$(BUILD)/test_falloc.o: $(TESTS)/test_falloc.c $(TESTS)/test_falloc.h
-	$(GCC) $(TCFLAGS) -c $(TESTS)/test_falloc.c -o $@
+$(BUILD)/test_pmm.o: $(TESTS)/test_pmm.c $(TESTS)/test_pmm.h
+	$(GCC) $(TCFLAGS) -c $(TESTS)/test_pmm.c -o $@
 
 $(BUILD)/test_mmap.o: $(TESTS)/test_mmap.c $(TESTS)/test_mmap.h
 	$(GCC) $(TCFLAGS) -c $(TESTS)/test_mmap.c -o $@
 
-$(BUILD)/falloc_host.o: $(MEMORY)/falloc.c
+$(BUILD)/pmm_host.o: $(MEMORY)/pmm.c
 	$(GCC) $(TCFLAGS) -c $< -o $@
 
 $(BUILD)/mmap_host.o: $(MEMORY)/mmap.c
@@ -84,9 +87,9 @@ tests: $(BUILD)/tests
 	$(BUILD)/tests
 
 run: all
-	qemu-system-i386 -drive format=raw,file=$(BUILD)/kernel.img
+	qemu-system-i386 -drive if=ide,format=raw,file=$(BUILD)/kernel.img
 
 clean:
-	rm -f $(BUILD)/*.bin $(BUILD)/*.o $(BUILD)/kernel.img $(BUILD)/kernel.elf $(BUILD)/tests
+	rm -f $(BUILD)/*.bin $(BUILD)/*.o $(BUILD)/*.img $(BUILD)/kernel.elf $(BUILD)/tests
 
 .PHONY: all run tests clean

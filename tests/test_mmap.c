@@ -2,11 +2,7 @@
 
 #include "../src/utils.h"
 
-/**
- * test_mmap_init - Test the mmap initialization
- *
- * Return: 0 on success, -1 on failure
- */
+/* Test mmap_init has three sections (I/O, kernel, free) with expected bounds; return 0 on pass, -1 on fail */
 int test_mmap_init(void) {
     mmap_t mmap;
     mmap_init(&mmap);

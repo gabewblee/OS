@@ -3,10 +3,7 @@
 
 #include <stdint.h>
 
-/**
- * IDT_MAX_DESCRIPTORS - Number of entries in the IDT
- */
-#define IDT_MAX_DESCRIPTORS 256
+#define IDT_MAX_DESCRIPTORS  256    /* Number of entries in the IDT */
 
 /**
  * struct idt_entry_t - 32-bit IDT entry
