@@ -1,5 +1,6 @@
 #include "../drivers/vga.h"
 #include "../interrupts/idt.h"
+#include "../interrupts/pic.h"
 #include "../memory/falloc.h"
 #include "../memory/paging.h"
 #include "../memory/mmap.h"
@@ -41,18 +42,24 @@ void kernel_init(void) {
     vga_print_string(0, 0, "Initialized terminal", WHITE, BLACK);
 
     /* Interrupts */
-    // idt_init();
-    // vga_print_string(1, 0, "Initialized interrupts", WHITE, BLACK);
+    idt_init();
+    vga_print_string(1, 0, "Initialized IDT", WHITE, BLACK);
+
+    pic_init(0x20, 0x28);
+    irq_clear_mask(0);                  /* Enable timer (IRQ0) */
+    irq_clear_mask(1);                  /* Enable keyboard (IRQ1) */
+    __asm__ volatile ("sti");               /* Enable interrupts */
+    vga_print_string(2, 0, "Initialized PIC", WHITE, BLACK);
 
     /* Memory */
     mmap_init(&mmap);
-    vga_print_string(2, 0, "Initialized global memory map", WHITE, BLACK);
+    vga_print_string(3, 0, "Initialized global memory map", WHITE, BLACK);
 
     falloc_init(&mmap);
-    vga_print_string(3, 0, "Initialized page frame allocator", WHITE, BLACK);
+    vga_print_string(4, 0, "Initialized page frame allocator", WHITE, BLACK);
 
     paging_init(&mmap);
-    vga_print_string(4, 0, "Initialized paging", WHITE, BLACK);
+    vga_print_string(5, 0, "Initialized paging", WHITE, BLACK);
 }
 
 /**
