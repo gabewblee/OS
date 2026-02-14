@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "test_falloc.h"
+#include "test_pmm.h"
 #include "test_mmap.h"
 
 /**
@@ -26,11 +26,11 @@ void panic(const char *err) {
 static int run(void) {
     int failed = 0;
 
-    if (test_falloc_init() != 0) {
-        fprintf(stderr, "FAIL: test_falloc_init\n");
+    if (test_pmm_init() != 0) {
+        fprintf(stderr, "FAIL: test_pmm_init\n");
         failed = 1;
     } else {
-        fprintf(stdout, "PASS: test_falloc_init\n");
+        fprintf(stdout, "PASS: test_pmm_init\n");
     }
 
     if (test_mmap_init() != 0) {

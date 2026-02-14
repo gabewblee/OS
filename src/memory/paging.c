@@ -1,4 +1,4 @@
-#include "falloc.h"
+#include "pmm.h"
 #include "paging.h"
 
 #include "../utils.h"
@@ -124,7 +124,7 @@ int map(uint32_t vaddr, uint32_t paddr, uint32_t flags) {
     pg_dir_entry_t *pg_dir_entry = &pg_dir[pg_dir_index];
     if (!pg_dir_entry->present) {
         uint32_t allocated;
-        if (fallocate(&allocated) == -1)
+        if (falloc(&allocated) == -1)
             return -1;
         
         pg_table_entry_t *new = (pg_table_entry_t *)(uintptr_t)allocated;
@@ -211,7 +211,7 @@ void invalidate_tlb(uint32_t vaddr) {
 static void paging_kernel_space(const mmap_t *mmap) {
     msection_t kernel_section;
     if (mmap_find_kernel_section(mmap, &kernel_section) == -1)
-        panic("Error: kernel section not found in memory map");
+        panic("Error: failed to find kernel section in memory map");
 
     uint64_t start_aligned = get_lower_alignment(ADDR_IO_START, PAGE_SIZE);
     uint64_t end_aligned = get_upper_alignment((uint64_t)kernel_section.end + 1, PAGE_SIZE);
@@ -223,8 +223,8 @@ static void paging_kernel_space(const mmap_t *mmap) {
         pg_dir_entry->rw = 1;
 
         uint32_t allocated;
-        if (fallocate(&allocated) == -1)
-            panic("Error: frame allocation failed");
+        if (falloc(&allocated) == -1)
+            panic("Error: failed to allocate frame");
 
         pg_table_entry_t *pg_table = (pg_table_entry_t *)(uintptr_t)allocated;
         for (uint32_t i = 0; i < NUM_PAGE_ENTRIES; i++)
@@ -251,6 +251,9 @@ static void paging_kernel_space(const mmap_t *mmap) {
  * Return: Nothing
  */
 void paging_init(const mmap_t *mmap) {
+    if (!mmap)
+        panic("Error: failed to initialize NULL memory map");
+
     /* Zero out the page directory */
     pg_dir_zero(pg_dir);
 

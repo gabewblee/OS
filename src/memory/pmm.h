@@ -1,5 +1,5 @@
-#ifndef FALLOC_H
-#define FALLOC_H
+#ifndef PMM_H
+#define PMM_H
 
 #include <stdint.h>
 
@@ -61,39 +61,39 @@
 #define ADDR_FREE_END          0xFFFFFFFF
 
 /**
- * struct frame_allocator - Physical frame allocator state
+ * struct pmm_t - Physical memory manager
  * @bitmap: Allocation bitmap (1 bit per 4 KiB page)
  */
-typedef struct frame_allocator {
+typedef struct pmm_t {
     uint32_t bitmap[BITMAP_SIZE];
-} frame_allocator;
+} pmm_t;
 
 /**
- * get_frame_allocator - Get the frame allocator instance
+ * get_pmm - Get the pmm instance
  *
- * Return: Pointer to the frame allocator instance
+ * Return: Pointer to the pmm instance
  */
-frame_allocator *get_frame_allocator(void);
+pmm_t *get_pmm(void);
 
 /**
- * falloc_init - Initialize the frame allocator
+ * pmm_init - Initialize the pmm
  * @map: Pointer to the memory map
  *
  * Return: Nothing
  */
-void falloc_init(const mmap_t *map);
+void pmm_init(const mmap_t *map);
 
 /**
- * fallocate - Allocate a physical frame
+ * falloc - Allocate a physical frame
  * @paddr: On success, set to the physical address of the frame
  *
  * Return: 0 on success, -1 on failure (no free frame)
  */
-int fallocate(uint32_t *paddr);
+int falloc(uint32_t *paddr);
 
 /**
  * ffree - Free a previously allocated frame
- * @paddr: Physical address of the frame (as returned by fallocate())
+ * @paddr: Physical address of the frame (as returned by falloc())
  *
  * Return: Nothing
  */

@@ -1,7 +1,8 @@
+#include "../drivers/ata_pio.h"
 #include "../drivers/vga.h"
 #include "../interrupts/idt.h"
 #include "../interrupts/pic.h"
-#include "../memory/falloc.h"
+#include "../memory/pmm.h"
 #include "../memory/paging.h"
 #include "../memory/mmap.h"
 
@@ -29,6 +30,8 @@ mmap_t mmap;
  */
 void terminal_init(void) {
     vga_clear_screen(BLACK);
+    vga_enable_cursor(0, 15);
+    vga_update_cursor(vga_row, vga_col);
 }
 
 /**
@@ -37,29 +40,29 @@ void terminal_init(void) {
  * Return: Nothing
  */
 void kernel_init(void) {
-    /* Terminal */
     terminal_init();
-    vga_print_string(0, 0, "Initialized terminal", WHITE, BLACK);
+    vga_print_string("Initialized terminal\n", WHITE, BLACK);
 
-    /* Interrupts */
     idt_init();
-    vga_print_string(1, 0, "Initialized IDT", WHITE, BLACK);
+    vga_print_string("Initialized IDT\n", WHITE, BLACK);
 
     pic_init(0x20, 0x28);
-    irq_clear_mask(0);                  /* Enable timer (IRQ0) */
-    irq_clear_mask(1);                  /* Enable keyboard (IRQ1) */
-    __asm__ volatile ("sti");               /* Enable interrupts */
-    vga_print_string(2, 0, "Initialized PIC", WHITE, BLACK);
+    irq_clear_mask(0);                       /* Enable timer (IRQ0) */
+    irq_clear_mask(1);                       /* Enable keyboard (IRQ1) */
+    __asm__ volatile ("sti");                /* Enable interrupts */
+    vga_print_string("Initialized PIC\n", WHITE, BLACK);
 
-    /* Memory */
     mmap_init(&mmap);
-    vga_print_string(3, 0, "Initialized global memory map", WHITE, BLACK);
+    vga_print_string("Initialized global memory map\n", WHITE, BLACK);
 
-    falloc_init(&mmap);
-    vga_print_string(4, 0, "Initialized page frame allocator", WHITE, BLACK);
+    pmm_init(&mmap);
+    vga_print_string("Initialized page frame allocator\n", WHITE, BLACK);
+
+    ata_pio_init();
+    vga_print_string("Initialized ATA PIO drivers\n", WHITE, BLACK);
 
     paging_init(&mmap);
-    vga_print_string(5, 0, "Initialized paging", WHITE, BLACK);
+    vga_print_string("Initialized paging\n", WHITE, BLACK);
 }
 
 /**

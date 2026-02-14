@@ -1,9 +1,9 @@
-#ifndef TEST_FALLOC_H
-#define TEST_FALLOC_H
+#ifndef TEST_PMM_H
+#define TEST_PMM_H
 
 #include <stdint.h>
 
-#include "../src/memory/falloc.h"
+#include "../src/memory/pmm.h"
 
 /**
  * PAGE_SIZE - System page size in bytes
@@ -21,10 +21,10 @@
  #define ADDR_FREE_END          0xFFFFFFFF
 
 /**
- * test_falloc_init - Test the falloc initialization
+ * test_pmm_init - Test the pmm initialization
  *
  * Return: 0 on success, -1 on failure
  */
-int test_falloc_init(void);
+int test_pmm_init(void);
 
 #endif

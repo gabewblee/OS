@@ -88,8 +88,11 @@ isr_err_stub    30
 isr_no_err_stub 31
 
 ; IRQ stubs (mapped to vectors 0x20-0x2F)
-irq_stub 0, 32    ; Timer -> vector 0x20
-irq_stub 1, 33    ; Keyboard -> vector 0x21
+%assign i 0
+%rep 16
+    irq_stub i, i + 32
+%assign i i+1
+%endrep
 
 ; Table of ISR stub addresses
 global isr_stub_table
@@ -102,5 +105,8 @@ isr_stub_table:
 
 global irq_stub_table
 irq_stub_table:
-    dd irq_stub_0
-    dd irq_stub_1
+%assign i 0
+%rep 16
+    dd irq_stub_%+i
+%assign i i+1
+%endrep

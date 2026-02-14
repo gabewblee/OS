@@ -29,7 +29,8 @@
  */
 static inline void panic(const char *err) {
     vga_clear_screen(BLACK);
-    vga_print_string(0, 0, err, WHITE, BLACK);
+    vga_print_string(err, RED, BLACK);
+    __asm__ volatile ("cli; hlt");
     while(1);
 }
 #else

@@ -1,12 +1,12 @@
 #include <stddef.h>
 
-#include "falloc.h"
+#include "pmm.h"
 #include "../utils.h"
 
 /**
- * falloc - Frame allocator instance
+ * pmm - Frame allocator instance
  */
-static frame_allocator falloc;
+static pmm_t pmm;
 
 /**
  * reserve - Mark a physical address range as used
@@ -22,33 +22,33 @@ static void reserve(uint32_t start, uint32_t end) {
     uint64_t end_aligned = get_lower_alignment(end, PAGE_SIZE);
     for (uint64_t addr = start_aligned; addr <= end_aligned; addr += PAGE_SIZE) {
         uint32_t pg_number = (uint32_t)(addr / PAGE_SIZE);
-        falloc.bitmap[pg_number / WORD_SIZE] |= (1U << (pg_number % WORD_SIZE));
+        pmm.bitmap[pg_number / WORD_SIZE] |= (1U << (pg_number % WORD_SIZE));
     }
 }
 
 /**
- * get_frame_allocator - Get the frame allocator instance
+ * get_pmm - Get the pmm instance
  *
  * Return: Pointer to the frame allocator instance
  */
-frame_allocator *get_frame_allocator(void) {
-    return &falloc;
+pmm_t *get_pmm(void) {
+    return &pmm;
 }
 
 /**
- * falloc_init - Initialize the frame allocator
+ * pmm_init - Initialize the pmm
  *
  * Reserves low memory, kernel space, and the allocator's bitmap storage
  * @map: Pointer to the memory map
  *
  * Return: Nothing
  */
-void falloc_init(const mmap_t *map) {
-    for (uint32_t i = 0; i < BITMAP_SIZE; i++)
-        falloc.bitmap[i] = 0;
-
+void pmm_init(const mmap_t *map) {
     if (!map)
-        panic("Error: NULL memory map passed to falloc_init");
+        panic("Error: failed to initialize NULL memory map");
+
+    for (uint32_t i = 0; i < BITMAP_SIZE; i++)
+        pmm.bitmap[i] = 0;
 
     for (uint32_t i = 0; i < map->count; i++) {
         const msection_t *section = &map->sections[i];
@@ -58,18 +58,18 @@ void falloc_init(const mmap_t *map) {
 }
 
 /**
- * fallocate - Allocate a free physical frame
+ * falloc - Allocate a free physical frame
  * @paddr: On success, set to the physical address of the frame
  *
  * Return: 0 on success, -1 on failure
  */
-int fallocate(uint32_t *paddr) {
+int falloc(uint32_t *paddr) {
     for (uint32_t i = 0; i < BITMAP_SIZE; i++) {
-        if (falloc.bitmap[i] != 0xFFFFFFFF) {
+        if (pmm.bitmap[i] != 0xFFFFFFFF) {
             for (uint32_t j = 0; j < WORD_SIZE; j++) {
                 uint32_t mask = 1U << j;
-                if (!(falloc.bitmap[i] & mask)) {
-                    falloc.bitmap[i] |= mask;
+                if (!(pmm.bitmap[i] & mask)) {
+                    pmm.bitmap[i] |= mask;
                     *paddr = (i * WORD_SIZE + j) * PAGE_SIZE;
                     return 0;
                 }
@@ -89,5 +89,5 @@ void ffree(uint32_t paddr) {
     uint32_t page_number = paddr / PAGE_SIZE;
     uint32_t index = page_number / WORD_SIZE;
     uint32_t bit = page_number % WORD_SIZE;
-    falloc.bitmap[index] &= ~(1U << bit);
+    pmm.bitmap[index] &= ~(1U << bit);
 }
