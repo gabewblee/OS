@@ -5,30 +5,11 @@
 
 #include "mmap.h"
 
-/**
- * PAGE_SIZE - System page size in bytes
- */
-#define PAGE_SIZE               4096
-
-/**
- * NUM_PAGE_ENTRIES - Number of entries in a page directory or page table
- */
-#define NUM_PAGE_ENTRIES        (PAGE_SIZE / sizeof(uint32_t))
-
-/**
- * ADDR_IDENTITY_START - Start address for identity mapping
- */
-#define ADDR_IDENTITY_START     0x00000000
-
-/**
- * PG_FLAG_RW - Read/write permission flag
- */
-#define PG_FLAG_RW              0x01
-
-/**
- * PG_FLAG_USER - User/supervisor permission flag
- */
-#define PG_FLAG_USER            0x02
+#define PAGE_SIZE               4096                            /* System page size in bytes */
+#define NUM_PAGE_ENTRIES        (PAGE_SIZE / sizeof(uint32_t))  /* Entries per directory/table */
+#define ADDR_IDENTITY_START     0x00000000                      /* Start of identity mapping */
+#define PG_FLAG_RW              0x01                            /* Read/write permission flag */
+#define PG_FLAG_USER            0x02                            /* User/supervisor permission flag */
 
 /**
  * struct pg_dir_entry_t - Page directory entry structure

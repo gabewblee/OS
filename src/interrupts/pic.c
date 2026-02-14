@@ -1,10 +1,12 @@
 #include "pic.h"
 #include "../io.h"
 
+/* Remap PICs to given vector offsets and enable them */
 void pic_init(uint8_t offset1, uint8_t offset2) {
     pic_remap(offset1, offset2);
 }
 
+/* Send ICW1–ICW4 to both PICs and unmask all IRQs */
 void pic_remap(int offset1, int offset2) {
     /* ICW1: Start initialization sequence (cascade mode) */
     outb(PIC1_COMMAND, ICW1_INIT | ICW1_ICW4);
@@ -35,6 +37,7 @@ void pic_remap(int offset1, int offset2) {
     outb(PIC2_DATA, 0);
 }
 
+/* Send EOI to master and slave (if irq >= 8) for given irq */
 void pic_send_eoi(uint8_t irq) {
     if (irq >= 8) {
         outb(PIC2_COMMAND, PIC_EOI);
@@ -42,12 +45,14 @@ void pic_send_eoi(uint8_t irq) {
     outb(PIC1_COMMAND, PIC_EOI);
 }
 
+/* Mask all IRQs on both PICs */
 void pic_disable(void) {
     /* Mask all interrupts */
     outb(PIC1_DATA, 0xFF);
     outb(PIC2_DATA, 0xFF);
 }
 
+/* Set mask bit for given IRQ (disable that IRQ line) */
 void irq_set_mask(uint8_t irq) {
     uint16_t port;
     uint8_t mask;
@@ -63,6 +68,7 @@ void irq_set_mask(uint8_t irq) {
     outb(port, mask);
 }
 
+/* Clear mask bit for given IRQ (enable that IRQ line) */
 void irq_clear_mask(uint8_t irq) {
     uint16_t port;
     uint8_t mask;
@@ -78,22 +84,19 @@ void irq_clear_mask(uint8_t irq) {
     outb(port, mask);
 }
 
-/**
- * __pic_get_irq_reg - Read a PIC register via OCW3
- * @ocw3: The OCW3 command (PIC_READ_IRR or PIC_READ_ISR)
- *
- * Return: Combined 16-bit value from both PICs
- */
+/* Read IRR or ISR from both PICs via OCW3; returns combined 16-bit value */
 static uint16_t __pic_get_irq_reg(int ocw3) {
     outb(PIC1_COMMAND, ocw3);
     outb(PIC2_COMMAND, ocw3);
     return (inb(PIC2_COMMAND) << 8) | inb(PIC1_COMMAND);
 }
 
+/* Return In-Service Register (which IRQs are being serviced) */
 uint16_t pic_get_irr(void) {
     return __pic_get_irq_reg(PIC_READ_IRR);
 }
 
+/* Return Interrupt Request Register (pending IRQs) */
 uint16_t pic_get_isr(void) {
     return __pic_get_irq_reg(PIC_READ_ISR);
 }

@@ -24,11 +24,11 @@
 #define ICW4_BUF_MASTER	0x0C		/* Buffered mode/master */
 #define ICW4_SFNM	    0x10		/* Special fully nested (not) */
 
-#define CASCADE_IRQ     2
+#define CASCADE_IRQ     2           /* IRQ number for cascading */
 
 /* OCW3 commands for reading PIC registers */
-#define PIC_READ_IRR    0x0a    /* Read IRQ Request Register */
-#define PIC_READ_ISR    0x0b    /* Read In-Service Register */
+#define PIC_READ_IRR    0x0a        /* Read IRQ Request Register */
+#define PIC_READ_ISR    0x0b        /* Read In-Service Register */
 
 /**
  * pic_init - Initialize the 8259 PIC

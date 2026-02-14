@@ -6,20 +6,9 @@
 #ifndef TEST
 #include "drivers/vga.h"
 
-/** 
- * BLACK - Black vga color definition
- */
-#define BLACK 0x00
-
-/** 
- * WHITE - White vga color definition
- */
-#define WHITE 0x0F
-
-/** 
- * RED - Red vga color definition
- */
-#define RED 0x0C
+#define BLACK  0x00    /* Black VGA color */
+#define WHITE  0x0F    /* White VGA color */
+#define RED    0x0C    /* Red VGA color */
 
 /**
  * panic - Display a panic message and halt the system
@@ -29,7 +18,8 @@
  */
 static inline void panic(const char *err) {
     vga_clear_screen(BLACK);
-    vga_print_string(0, 0, err, WHITE, BLACK);
+    vga_print_string(err, RED, BLACK);
+    __asm__ volatile ("cli; hlt");
     while(1);
 }
 #else

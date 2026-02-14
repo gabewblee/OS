@@ -3,40 +3,13 @@
 
 #include <stdint.h>
 
-/**
- * MAX_MEM_SECTIONS - Maximum number of memory sections
- */
-#define MAX_MEM_SECTIONS 16
-
-/**
- * ADDR_IO_START - I/O memory start
- */
- #define ADDR_IO_START    0x00000000
-
- /**
-  * ADDR_IO_END - I/O memory end
-  */
- #define ADDR_IO_END      0x000FFFFF
- 
- /**
-  * ADDR_KERNEL_START - Kernel memory start
-  */
- #define ADDR_KERNEL_START      0x00100000
- 
- /**
-  * ADDR_KERNEL_END - Kernel memory end
-  */
- #define ADDR_KERNEL_END        0x004FFFFF
- 
- /**
-  * ADDR_FREE_START - Free memory start
-  */
- #define ADDR_FREE_START        0x00500000
- 
- /**
-  * ADDR_FREE_END - Free memory end
-  */
- #define ADDR_FREE_END          0xFFFFFFFF
+#define MAX_MEM_SECTIONS        16          /* Maximum number of memory sections */
+#define ADDR_IO_START           0x00000000  /* I/O memory start */
+#define ADDR_IO_END             0x000FFFFF  /* I/O memory end */
+#define ADDR_KERNEL_START       0x00100000  /* Kernel memory start */
+#define ADDR_KERNEL_END         0x004FFFFF  /* Kernel memory end */
+#define ADDR_FREE_START         0x00500000  /* Free memory start */
+#define ADDR_FREE_END           0xFFFFFFFF  /* Free memory end */
 
 /**
  * enum mem_type_t - Memory section types

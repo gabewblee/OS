@@ -2,32 +2,28 @@
 
 #include "../utils.h"
 
-/**
- * register_section - Add a memory section to the memory map
- * @map: Pointer to the memory map
- * @start: Start address of the section
- * @end: End address of the section
- * @type: Type of the memory section
- *
- * Return: Nothing
- */
+/* Append one section (start, end, type) to map; panic on overflow or invalid args */
 static void register_section(mmap_t *map, uint32_t start, uint32_t end, mtype_t type) {
     if (map->count >= MAX_MEM_SECTIONS)
-        panic("Error: maximum number of memory sections reached");
-    
+        panic("Error: failed to register more sections");
+
+    if (start > end || start > ADDR_FREE_END || end > ADDR_FREE_END)
+        panic("Error: section address out of range");
+
+    if (type != SECTION_IO && type != SECTION_KERNEL && type != SECTION_FREE)
+        panic("Error: section type invalid");
+        
     map->sections[map->count].start = start;
     map->sections[map->count].end = end;
     map->sections[map->count].type = type;
     map->count++;
 }
 
-/**
- * mmap_init - Initialize the memory map
- * @map: Pointer to the memory map to initialize
- *
- * Return: Nothing
- */
+/* Initialize map with I/O, kernel, and free sections */
 void mmap_init(mmap_t *map) {
+    if (!map)
+        panic("Error: failed to initialize NULL memory map");
+
     map->count = 0;
 
     /* I/O memory */

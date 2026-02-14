@@ -1,21 +1,14 @@
-#include "falloc.h"
+#include "pmm.h"
 #include "paging.h"
 
 #include "../utils.h"
 #include "../drivers/vga.h"
 
-/**
- * pg_dir - Page directory
- */
+/* Page directory (one entry per 4MB) */
 __attribute__((aligned(PAGE_SIZE)))
 static pg_dir_entry_t pg_dir[NUM_PAGE_ENTRIES];
 
-/**
- * pg_dir_entry_zero - Zero out a page directory entry
- * @entry: Page directory entry to zero
- *
- * Return: Nothing
- */
+/* Zero all fields of a page directory entry */
 static void pg_dir_entry_zero(pg_dir_entry_t *pg_dir_entry) {
     pg_dir_entry->present   = 0;
     pg_dir_entry->rw        = 0;
@@ -29,12 +22,7 @@ static void pg_dir_entry_zero(pg_dir_entry_t *pg_dir_entry) {
     pg_dir_entry->address   = 0;
 }
 
-/**
- * pg_table_entry_zero - Zero out a page table entry
- * @entry: Page table entry to zero
- *
- * Return: Nothing
- */
+/* Zero all fields of a page table entry */
 static void pg_table_entry_zero(pg_table_entry_t *pg_table_entry) {
     pg_table_entry->present  = 0;
     pg_table_entry->rw       = 0;
@@ -49,13 +37,7 @@ static void pg_table_entry_zero(pg_table_entry_t *pg_table_entry) {
     pg_table_entry->address  = 0;
 }
 
-/**
- * mmap_find_kernel_section - Find the kernel memory section in the memory map
- * @mmap: Pointer to the memory map
- * @msection: Output parameter to store the found section
- *
- * Return: 0 on success, -1 if not found
- */
+/* Find SECTION_KERNEL in mmap; store in *msection and return 0, else -1 */
 static int mmap_find_kernel_section(const mmap_t *mmap, msection_t *msection) {
     for (uint32_t i = 0; i < mmap->count; i++) {
         if (mmap->sections[i].type == SECTION_KERNEL) {
@@ -67,24 +49,13 @@ static int mmap_find_kernel_section(const mmap_t *mmap, msection_t *msection) {
     return -1;
 }
 
-/**
- * pg_dir_zero - Zero out a page directory
- * @pg_dir_entry: Page directory to zero
- *
- * Return: Nothing
- */
+/* Zero all entries in the given page directory */
 static void pg_dir_zero(pg_dir_entry_t *pg_dir_entry) {
     for (uint32_t i = 0; i < NUM_PAGE_ENTRIES; i++)
         pg_dir_entry_zero(&pg_dir_entry[i]);
 }
 
-/**
- * get_paddr - Get the physical address of a virtual address
- * @vaddr: Virtual address
- * @paddr: On success, set to the physical address
- *
- * Return: 0 on success, -1 if not mapped
- */
+/* Resolve vaddr to physical address; set *paddr and return 0, else -1 if not mapped */
 int get_paddr(uint32_t vaddr, uint32_t *paddr) {
     uint32_t pg_dir_index = (vaddr >> 22) & 0x3FF;
     uint32_t pg_table_index = (vaddr >> 12) & 0x3FF;
@@ -102,15 +73,7 @@ int get_paddr(uint32_t vaddr, uint32_t *paddr) {
     return 0;
 }
 
-/**
- * map - Map one virtual page to a physical frame
- * @vaddr: Virtual address (page-aligned)
- * @paddr: Physical address (page-aligned)
- * @flags: PG_FLAG_RW, PG_FLAG_USER, or 0
- *
- * Allocates a page table for the directory entry if needed. Invalidates TLB for @vaddr.
- * Return: 0 on success, -1 on failure
- */
+/* Map one page-aligned vaddr to paddr with flags; allocates PT if needed; invalidates TLB */
 int map(uint32_t vaddr, uint32_t paddr, uint32_t flags) {
     if ((vaddr & 0xFFFFF000) != vaddr)
         return -1;
@@ -124,7 +87,7 @@ int map(uint32_t vaddr, uint32_t paddr, uint32_t flags) {
     pg_dir_entry_t *pg_dir_entry = &pg_dir[pg_dir_index];
     if (!pg_dir_entry->present) {
         uint32_t allocated;
-        if (fallocate(&allocated) == -1)
+        if (falloc(&allocated) == -1)
             return -1;
         
         pg_table_entry_t *new = (pg_table_entry_t *)(uintptr_t)allocated;
@@ -158,13 +121,7 @@ int map(uint32_t vaddr, uint32_t paddr, uint32_t flags) {
     return 0;
 }
 
-/**
- * unmap - Remove mapping for one virtual page
- * @vaddr: Virtual address (page-aligned)
- *
- * Clears the PTE. Invalidates TLB for @vaddr.
- * Return: 0 on success, -1 on failure
- */ 
+/* Clear PTE for page-aligned vaddr and invalidate TLB; return 0 on success, -1 on failure */
 int unmap(uint32_t vaddr) {
     if ((vaddr & 0xFFFFF000) != vaddr)
         return -1;
@@ -185,12 +142,7 @@ int unmap(uint32_t vaddr) {
     return 0;
 }
 
-/**
- * invalidate_tlb - Invalidate TLB entry for one virtual address
- * @vaddr: Virtual address
- *
- * Uses invlpg (i486+). Call after changing a mapping so the CPU uses the updated PTE.
- */
+/* Invalidate TLB entry for vaddr (invlpg); call after changing a mapping */
 void invalidate_tlb(uint32_t vaddr) {
     __asm__ volatile (
         "invlpg (%0)"
@@ -200,18 +152,11 @@ void invalidate_tlb(uint32_t vaddr) {
     );
 }
 
-/**
- * paging_kernel_space - Identity map the kernel space
- *
- * Sets up page tables to map the kernel's physical memory
- * @mmap: Pointer to the memory map
- *
- * Return: Nothing
- */
+/* Identity-map kernel section from mmap (ADDR_IO_START to kernel end) */
 static void paging_kernel_space(const mmap_t *mmap) {
     msection_t kernel_section;
     if (mmap_find_kernel_section(mmap, &kernel_section) == -1)
-        panic("Error: kernel section not found in memory map");
+        panic("Error: failed to find kernel section in memory map");
 
     uint64_t start_aligned = get_lower_alignment(ADDR_IO_START, PAGE_SIZE);
     uint64_t end_aligned = get_upper_alignment((uint64_t)kernel_section.end + 1, PAGE_SIZE);
@@ -223,8 +168,8 @@ static void paging_kernel_space(const mmap_t *mmap) {
         pg_dir_entry->rw = 1;
 
         uint32_t allocated;
-        if (fallocate(&allocated) == -1)
-            panic("Error: frame allocation failed");
+        if (falloc(&allocated) == -1)
+            panic("Error: failed to allocate frame");
 
         pg_table_entry_t *pg_table = (pg_table_entry_t *)(uintptr_t)allocated;
         for (uint32_t i = 0; i < NUM_PAGE_ENTRIES; i++)
@@ -242,15 +187,11 @@ static void paging_kernel_space(const mmap_t *mmap) {
     }
 }
 
-/**
- * paging_init - Initialize paging
- *
- * Sets up paging structures and enables paging
- * @mmap: Pointer to the memory map
- *
- * Return: Nothing
- */
+/* Zero page directory, identity-map kernel, load CR3 and enable paging */
 void paging_init(const mmap_t *mmap) {
+    if (!mmap)
+        panic("Error: failed to initialize NULL memory map");
+
     /* Zero out the page directory */
     pg_dir_zero(pg_dir);
 
